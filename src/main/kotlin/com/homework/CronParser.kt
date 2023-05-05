@@ -2,7 +2,6 @@ package com.homework
 
 import kotlin.system.exitProcess
 
-
 object CronParser {
     const val ERROR_CODE = 1
     const val FIELD_NAME_COLUMN_SIZE = 14

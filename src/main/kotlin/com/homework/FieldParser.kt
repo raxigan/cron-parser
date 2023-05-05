@@ -33,14 +33,14 @@ class FieldParser {
         return toInt
     }
 
-    private fun extractWithStep(field: String, fieldDescriptor: FieldDescriptor):List<Int> {
+    private fun extractWithStep(field: String, fieldDescriptor: FieldDescriptor): List<Int> {
         val split = field.split("/")
         val range = parseField(split[0], fieldDescriptor)
         val interval = split[1].toInt()
         return (range.indices step (interval)).map { range[it] }
     }
 
-    private fun extractDashRange(field:String, fieldDescriptor: FieldDescriptor): List<Int> {
+    private fun extractDashRange(field: String, fieldDescriptor: FieldDescriptor): List<Int> {
         val range = field.split("-")
         val start = range[0].toInt()
         val end = range[1].toInt()

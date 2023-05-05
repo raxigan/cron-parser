@@ -4,9 +4,9 @@
 
 ### Running the app
 
-* **Using [kscript](https://kscript.org/) (4.0.0+)**
+* **Using [kscript](https://kscript.org/) (4.0.0+) - depends on [kotlin executable](https://kotlinlang.org/docs/command-line.html)**
 
-Run the following command from project root directory:
+Run the following command from the project root directory:
 
 ```shell
 ./cron_parser.kts "*/15 0 1,15 * 1-5 /usr/bin/find"
@@ -16,11 +16,11 @@ or
 kscript cron_parser.kts "*/15 0 1,15 * 1-5 /usr/bin/find"
 ```
 
-* **Using kotlin binary**
+* **Using [kotlin executable](https://kotlinlang.org/docs/command-line.html)**
 
-Build the project using maven and execute the following command from project root directory:
+Build the project using maven (provided maven wrapper might be used) and execute the following command from the project root directory:
 ```shell
-kotlin -cp target/cron-parser-0.0.1-SNAPSHOT.jar com.homework.App "*/15 0 1,15 * 1-5 /usr/bin/find"
+kotlin -cp target/cron-parser-0.0.1-SNAPSHOT.jar com.homework.AppKt "*/15 0 1,15 * 1-5 /usr/bin/find"
 ```
 
 * **Using IntelliJ IDEA**
