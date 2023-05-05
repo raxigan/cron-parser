@@ -43,7 +43,7 @@ class CronParserTest {
     @ValueSource(strings = ["-h", "--help"])
     fun `should print manual and exit when help argument provided`(arg: String) {
 
-        tryParse(emptyArray())
+        tryParse(arrayOf(arg))
 
         assertOutputEquals("Usage: cron_parser.kts <cron_string>")
     }
