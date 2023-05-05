@@ -13,7 +13,7 @@ fun parse(args: Array<String>) {
     val timeFieldsNo = FieldDescriptor.values().size
 
     if (args.isEmpty() || args.contains("--help") || args.contains("-h")) {
-        println("Usage: cron_parser.kts <cron_string>")
+        println("Usage: cron_parser.kts <cron_expression>")
         exitWithError()
         return
     }

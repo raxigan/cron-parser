@@ -4,8 +4,10 @@ import com.homework.CronParser.ERROR_CODE
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockkStatic
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -36,7 +38,7 @@ class CronParserTest {
 
         tryParse(emptyArray())
 
-        assertOutputEquals("Usage: cron_parser.kts <cron_string>")
+        assertOutputEquals("Usage: cron_parser.kts <cron_expression>")
     }
 
     @ParameterizedTest
@@ -45,7 +47,7 @@ class CronParserTest {
 
         tryParse(arrayOf(arg))
 
-        assertOutputEquals("Usage: cron_parser.kts <cron_string>")
+        assertOutputEquals("Usage: cron_parser.kts <cron_expression>")
     }
 
     @Test
@@ -60,16 +62,18 @@ class CronParserTest {
     @CsvSource(
         delimiter = '|',
         textBlock = """
-            0 0 1 * 1 /usr/bin/find                | month         1 2 3 4 5 6 7 8 9 10 11 12
-            0 0 1 1-12 1 /usr/bin/find             | month         1 2 3 4 5 6 7 8 9 10 11 12
-            0 0 1 1-12/2 1 /usr/bin/find           | month         1 3 5 7 9 11
-            0 0 1 1,3,5,7,9,11/2 1 /usr/bin/find   | month         1 5 9"""
+            0 0 1 * 1 /usr/bin/find              | month         1 2 3 4 5 6 7 8 9 10 11 12
+            0 0 1 1-12 1 /usr/bin/find           | month         1 2 3 4 5 6 7 8 9 10 11 12
+            0 0 1 3-6 1 /usr/bin/find            | month         3 4 5 6
+            0 0 1 1-12/2 1 /usr/bin/find         | month         1 3 5 7 9 11
+            0 0 1 3-12/2 1 /usr/bin/find         | month         3 5 7 9 11
+            0 0 1 1,3,5,7,9,11/2 1 /usr/bin/find | month         1 5 9"""
     )
-    internal fun `should print output when valid input was provided`(args: String, expectedMonths: String) {
+    internal fun `should print hours output when valid input was provided`(input: String, expectedMonths: String) {
 
-        tryParse(arrayOf(args))
+        tryParse(arrayOf(input))
 
-        assertEquals(expectedMonths, outputStreamCaptor.toString().split(System.lineSeparator())[3])
+        assertOutputEquals(expectedMonths, 3)
     }
 
     @Test
@@ -90,32 +94,15 @@ class CronParserTest {
     }
 
     @Test
-    internal fun `should print output when valid input was provided 2`() {
+    internal fun `should print output when valid input with asterisks was provided`() {
 
-        parse(arrayOf("1-20/2 0 1,15 * 1-5 /usr/bin/find"))
-
-        assertOutputEquals(
-            """
-                minute        1 3 5 7 9 11 13 15 17 19
-                hour          0
-                day of month  1 15
-                month         1 2 3 4 5 6 7 8 9 10 11 12
-                day of week   1 2 3 4 5
-                command       /usr/bin/find
-            """
-        )
-    }
-
-    @Test
-    internal fun `should print output when valid input was provided 3`() {
-
-        parse(arrayOf("*/15 0 1,15 * * /usr/bin/find"))
+        parse(arrayOf("*/15 * * * * /usr/bin/find"))
 
         assertOutputEquals(
             """
                 minute        0 15 30 45
-                hour          0
-                day of month  1 15
+                hour          0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+                day of month  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
                 month         1 2 3 4 5 6 7 8 9 10 11 12
                 day of week   1 2 3 4 5 6 7
                 command       /usr/bin/find
@@ -123,53 +110,41 @@ class CronParserTest {
         )
     }
 
-    @Test
-    internal fun `should print output when valid input was provided 4`() {
+    @ParameterizedTest
+    @CsvSource(
+        delimiter = '|',
+        textBlock = """
+            a 0 1,15 * * /usr/bin/find    | Invalid cron format on component 'a'
+            -1,2 0 1,15 * * /usr/bin/find | Invalid cron format on component '-1,2'
+            ,2 0 1,15 * * /usr/bin/find   | Invalid cron format on component ',2'
+            0 0/ 1,15 * * /usr/bin/find   | Invalid cron format on component '0/'"""
+    )
+    internal fun `should print error message when invalid cron component was provided`(
+        input: String,
+        expectedMessage: String
+    ) {
 
-        parse(arrayOf("1,2,3,4,5,6,7,8/2 0 1,15 * * /usr/bin/find"))
+        tryParse(arrayOf(input))
 
-        assertOutputEquals(
-            """
-                minute        1 3 5 7
-                hour          0
-                day of month  1 15
-                month         1 2 3 4 5 6 7 8 9 10 11 12
-                day of week   1 2 3 4 5 6 7
-                command       /usr/bin/find
-            """
-        )
+        assertOutputEquals(expectedMessage)
     }
 
-    @Test
-    internal fun `should print error message when invalid cron component was provided`() {
+    @ParameterizedTest
+    @CsvSource(
+        delimiter = '|',
+        textBlock = """
+            1-60 0 1,15 * * /usr/bin/find   | Field 'minute' 60 out of 0..59 range
+            1,2 24 1,15 * * /usr/bin/find   | Field 'hour' 24 out of 0..23 range
+            1,2 1,27 1,15 * * /usr/bin/find | Field 'hour' 27 out of 0..23 range"""
+    )
+    internal fun `should print error message when out of range cron component was provided`(
+        input: String,
+        expectedMessage: String
+    ) {
 
-        tryParse(arrayOf("a 0 1,15 * * /usr/bin/find"))
+        tryParse(arrayOf(input))
 
-        assertOutputEquals("Invalid cron format on component 'a'")
-    }
-
-    @Test
-    internal fun `should print error message when out of range cron component was provided`() {
-
-        tryParse(arrayOf("1-60 0 1,15 * * /usr/bin/find"))
-
-        assertOutputEquals("Field 'minute' 60 out of 0..59 range")
-    }
-
-    @Test
-    internal fun `should print error message when out of range cron component was provided 2`() {
-
-        tryParse(arrayOf("1,2 24 1,15 * * /usr/bin/find"))
-
-        assertOutputEquals("Field 'hour' 24 out of 0..23 range")
-    }
-
-    @Test
-    internal fun `should print error message when out of range cron component was provided 3`() {
-
-        tryParse(arrayOf("1,2 1,27 1,15 * * /usr/bin/find"))
-
-        assertOutputEquals("Field 'hour' 27 out of 0..23 range")
+        assertOutputEquals(expectedMessage)
     }
 
     @Test
@@ -183,7 +158,7 @@ class CronParserTest {
     @Test
     internal fun `should handle multiple spaces between cron components`() {
 
-        tryParse(arrayOf("1  1 1,15 * * /usr/bin/find"))
+        tryParse(arrayOf("1  1 1,15  * * /usr/bin/find"))
 
         assertOutputEquals(
             """
@@ -213,6 +188,10 @@ class CronParserTest {
 
     private fun assertOutputEquals(expected: String) {
         assertEquals(expected.trimIndent() + System.lineSeparator(), outputStreamCaptor.toString())
+    }
+
+    private fun assertOutputEquals(expected: String, lineNo: Int) {
+        assertEquals(expected.trimIndent(), outputStreamCaptor.toString().split(System.lineSeparator())[lineNo])
     }
 }
 
