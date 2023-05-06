@@ -2,70 +2,62 @@ package com.homework
 
 import kotlin.system.exitProcess
 
-object CronParser {
-    const val ERROR_CODE = 1
-    const val FIELD_NAME_COLUMN_SIZE = 14
-}
+class CronParser {
 
-fun parse(args: Array<String>) {
+    companion object {
+        const val ERROR_CODE = 1
+        const val FIELD_NAME_COLUMN_SIZE = 14
+        const val COMMAND_FIELD_NAME = "command"
 
-    val timeFieldsNo = FieldDescriptor.values().size
-
-    if (args.isEmpty() || args.contains("--help") || args.contains("-h")) {
-        println("Usage: cron_parser.kts <cron_expression>")
-        exitWithError()
-        return
+        const val USAGE_MESSAGE = "Usage: cron_parser.kts <cron_expression>"
+        const val TOO_FEW_ARGUMENTS_MESSAGE = "Too few cron components provided. Please provide a valid cron string."
     }
 
-    val cronString = args.first()
-    val cronComponents = cronString.split("\\s+".toRegex())
+    fun parse(args: Array<String>) {
 
-    if (cronComponents.size < timeFieldsNo + 1) {
-        println("Too few cron components provided. Please provide a valid cron string.")
-        exitWithError()
-        return
+        val timeFieldsNo = TimeDescriptor.values().size
+
+        if (args.isEmpty() || args.contains("--help") || args.contains("-h")) {
+            exitWithMessage(USAGE_MESSAGE)
+        }
+
+        val cronString = args.first()
+        val cronComponents = cronString.split("\\s+".toRegex())
+
+        if (cronComponents.size < timeFieldsNo + 1) {
+            exitWithMessage(TOO_FEW_ARGUMENTS_MESSAGE)
+        }
+
+        val command = cronComponents.drop(timeFieldsNo).joinToString(" ")
+
+        val timesOutput = timesOutput(cronComponents)
+        val commandOutput = commandOutput(command)
+
+        println(timesOutput)
+        println(commandOutput)
     }
 
-    val command = cronComponents.drop(timeFieldsNo).joinToString(" ")
+    private fun commandOutput(command: String): String {
+        return COMMAND_FIELD_NAME.padEnd(FIELD_NAME_COLUMN_SIZE) + command
+    }
 
-    val sb = StringBuilder()
+    private fun timeOutputLine(fieldDesc: TimeDescriptor, fieldValue: String): String {
+        return fieldDesc.desc.padEnd(FIELD_NAME_COLUMN_SIZE) +
+                FieldParser.parse(CronComponent(fieldValue, fieldDesc)).joinToString(" ")
+    }
 
-    printTimes(sb, cronComponents)
-    printCommand(sb, command)
-
-    println(sb)
+    private fun timesOutput(cronComponents: List<String>): String {
+        return TimeDescriptor.values()
+            .withIndex()
+            .joinToString(System.lineSeparator()) { timeOutputLine(it.value, cronComponents[it.index]) }
+    }
 }
 
 fun exitWithError() {
     exitProcess(CronParser.ERROR_CODE)
 }
 
-fun printCommand(stringBuilder: StringBuilder, command: String) {
-    stringBuilder.append("command".padEnd(CronParser.FIELD_NAME_COLUMN_SIZE) + command)
+fun exitWithMessage(message: String) {
+    println(message)
+    exitWithError()
 }
-
-fun printTimes(stringBuilder: StringBuilder, cronComponents: List<String>) {
-    FieldDescriptor.values().withIndex()
-        .forEach {
-            stringBuilder.append(
-                "${it.value.desc.padEnd(CronParser.FIELD_NAME_COLUMN_SIZE)}${
-                    FieldParser().parseField(
-                        cronComponents[it.index],
-                        it.value
-                    ).joinToString(" ")
-                }\n"
-            )
-        }
-}
-
-fun validateIsInRange(value: Int, fieldDescriptor: FieldDescriptor) {
-
-    val validRange = fieldDescriptor.minValue..fieldDescriptor.maxValue
-
-    if (value !in validRange) {
-        println("Field '${fieldDescriptor.desc}' $value out of $validRange range")
-        exitWithError()
-    }
-}
-
-

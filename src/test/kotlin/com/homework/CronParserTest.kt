@@ -1,6 +1,6 @@
 package com.homework
 
-import com.homework.CronParser.ERROR_CODE
+import com.homework.CronParser.Companion.ERROR_CODE
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockkStatic
@@ -79,7 +79,7 @@ class CronParserTest {
     @Test
     internal fun `should print output when valid input was provided`() {
 
-        parse(arrayOf("*/15 0 1,15 * 1-5 /usr/bin/find"))
+        tryParse(arrayOf("*/15 0 1,15 * 1-5 /usr/bin/find"))
 
         assertOutputEquals(
             """
@@ -96,11 +96,11 @@ class CronParserTest {
     @Test
     internal fun `should print output when valid input with asterisks was provided`() {
 
-        parse(arrayOf("*/15 * * * * /usr/bin/find"))
+        tryParse(arrayOf("*/2 * * * * /usr/bin/find"))
 
         assertOutputEquals(
             """
-                minute        0 15 30 45
+                minute        0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 52 54 56 58
                 hour          0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
                 day of month  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
                 month         1 2 3 4 5 6 7 8 9 10 11 12
@@ -114,10 +114,10 @@ class CronParserTest {
     @CsvSource(
         delimiter = '|',
         textBlock = """
-            a 0 1,15 * * /usr/bin/find    | Invalid cron format on component 'a'
-            -1,2 0 1,15 * * /usr/bin/find | Invalid cron format on component '-1,2'
-            ,2 0 1,15 * * /usr/bin/find   | Invalid cron format on component ',2'
-            0 0/ 1,15 * * /usr/bin/find   | Invalid cron format on component '0/'"""
+            a 0 1,15 * * /usr/bin/find    | Invalid cron expression format: 'a'
+            -1,2 0 1,15 * * /usr/bin/find | Invalid cron expression format: '-1,2'
+            ,2 0 1,15 * * /usr/bin/find   | Invalid cron expression format: ',2'
+            0 0/ 1,15 * * /usr/bin/find   | Invalid cron expression format: '0/'"""
     )
     internal fun `should print error message when invalid cron component was provided`(
         input: String,
@@ -133,9 +133,9 @@ class CronParserTest {
     @CsvSource(
         delimiter = '|',
         textBlock = """
-            1-60 0 1,15 * * /usr/bin/find   | Field 'minute' 60 out of 0..59 range
+            1-60 0 1,15 * * /usr/bin/find   | Field 'minute' 1-60 out of 0..59 range
             1,2 24 1,15 * * /usr/bin/find   | Field 'hour' 24 out of 0..23 range
-            1,2 1,27 1,15 * * /usr/bin/find | Field 'hour' 27 out of 0..23 range"""
+            1,2 1,27 1,15 * * /usr/bin/find | Field 'hour' 1,27 out of 0..23 range"""
     )
     internal fun `should print error message when out of range cron component was provided`(
         input: String,
@@ -145,14 +145,6 @@ class CronParserTest {
         tryParse(arrayOf(input))
 
         assertOutputEquals(expectedMessage)
-    }
-
-    @Test
-    internal fun `should print error message when negative cron component was provided`() {
-
-        tryParse(arrayOf("-1,2 0 1,15 * * /usr/bin/find"))
-
-        assertOutputEquals("Invalid cron format on component '-1,2'")
     }
 
     @Test
@@ -175,7 +167,7 @@ class CronParserTest {
     private fun tryParse(args: Array<String>): RuntimeException? {
 
         return try {
-            parse(args)
+            CronParser().parse(args)
             null
         } catch (ex: RuntimeException) {
             System.setOut(standardOut)
