@@ -21,7 +21,7 @@ sdk install kscript
 
 ### Running the app
 
-Build the project using maven (there's maven wrapper provided):
+Build the project using maven (there's maven wrapper provided). Then choose one of the following execution methods.
 
 ```shell
 ./mvnw package -DskipTests
@@ -41,7 +41,6 @@ kscript cron_parser.kts "*/15 0 1,15 * 1-5 /usr/bin/find"
 
 * **Run using [kotlin executable](https://kotlinlang.org/docs/command-line.html)**
 
-then execute the following command from the project root directory:
 ```shell
 kotlin -cp target/cron-parser-0.0.1-SNAPSHOT.jar com.homework.AppKt "*/15 0 1,15 * 1-5 /usr/bin/find"
 ```
