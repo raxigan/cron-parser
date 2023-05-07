@@ -2,22 +2,34 @@ package com.homework
 
 import kotlin.system.exitProcess
 
-class CronParser {
+class CronExpressionParser {
 
     companion object {
         const val ERROR_CODE = 1
         const val FIELD_NAME_COLUMN_SIZE = 14
         const val COMMAND_FIELD_NAME = "command"
+        val HELP_ARGUMENTS = listOf("--help", "-h", "help", "man")
 
-        const val USAGE_MESSAGE = "Usage: cron_parser.kts <cron_expression>"
-        const val TOO_FEW_ARGUMENTS_MESSAGE = "Too few cron components provided. Please provide a valid cron string."
+        val USAGE_MESSAGE = """
+            Usage: 
+                ./cron_parser.kts <cron_expression>
+            
+            Example: 
+                ./cron_parser.kts "*/15 0 1,15 * 1-5 /usr/bin/find"
+        """.trimIndent()
+        val TOO_FEW_ARGUMENTS_MESSAGE = """
+            Too few cron components provided. Please provide 5 cron time components and a command to be executed.
+            
+            Example: 
+                ./cron_parser.kts "*/15 0 1,15 * 1-5 /usr/bin/find"
+        """.trimIndent()
     }
 
     fun parse(args: Array<String>) {
 
         val timeFieldsNo = TimeDescriptor.values().size
 
-        if (args.isEmpty() || args.contains("--help") || args.contains("-h")) {
+        if (args.isEmpty() || HELP_ARGUMENTS.any { args.contains(it) }) {
             exitWithMessage(USAGE_MESSAGE)
         }
 
@@ -41,9 +53,9 @@ class CronParser {
         return COMMAND_FIELD_NAME.padEnd(FIELD_NAME_COLUMN_SIZE) + command
     }
 
-    private fun timeOutputLine(fieldDesc: TimeDescriptor, fieldValue: String): String {
-        return fieldDesc.desc.padEnd(FIELD_NAME_COLUMN_SIZE) +
-                FieldParser.parse(CronComponent(fieldValue, fieldDesc)).joinToString(" ")
+    private fun timeOutputLine(timeDescriptor: TimeDescriptor, fieldValue: String): String {
+        return timeDescriptor.label.padEnd(FIELD_NAME_COLUMN_SIZE) +
+                CronComponentParser.parse(CronComponent(fieldValue, timeDescriptor)).joinToString(" ")
     }
 
     private fun timesOutput(cronComponents: List<String>): String {
@@ -54,7 +66,7 @@ class CronParser {
 }
 
 fun exitWithError() {
-    exitProcess(CronParser.ERROR_CODE)
+    exitProcess(CronExpressionParser.ERROR_CODE)
 }
 
 fun exitWithMessage(message: String) {

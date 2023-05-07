@@ -2,4 +2,4 @@
 
 @file:DependsOnMaven("com.homework:cron-parser:0.0.1-SNAPSHOT")
 
-com.homework.CronParser().parse(args)
+com.homework.CronExpressionParser().parse(args)

@@ -1,7 +1,7 @@
 package com.homework
 
 @Suppress("unused")
-enum class TimeDescriptor(val minValue: Int, val maxValue: Int, val desc: String) {
+enum class TimeDescriptor(private val minValue: Int, private val maxValue: Int, val label: String) {
     MINUTE(0, 59, "minute"),
     HOUR(0, 23, "hour"),
     DAY_OF_MONTH(1, 31, "day of month"),

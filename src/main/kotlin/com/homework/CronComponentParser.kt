@@ -6,12 +6,12 @@ import com.homework.extractors.RangeExtractor
 import com.homework.extractors.StepExtractor
 
 
-object FieldParser {
+object CronComponentParser {
 
-    fun parse(field: CronComponent): List<Int> {
+    fun parse(cronComponent: CronComponent): List<Int> {
 
-        if (!field.isValid()) {
-            exitWithMessage(field.invalidFormatMessage())
+        if (!cronComponent.isValid()) {
+            exitWithMessage(cronComponent.invalidFormatMessage())
         }
 
         val extractors = listOf(
@@ -22,7 +22,7 @@ object FieldParser {
         )
 
         return extractors
-            .map { it.tryExtract(field) }
+            .map { it.tryExtract(cronComponent) }
             .flatten()
     }
 }

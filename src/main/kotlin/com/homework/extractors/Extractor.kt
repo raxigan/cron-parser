@@ -5,7 +5,7 @@ import com.homework.exitWithMessage
 
 interface Extractor {
 
-    fun char(): String
+    fun char(): Char
 
     fun extract(cronComponent: CronComponent): List<Int>
 

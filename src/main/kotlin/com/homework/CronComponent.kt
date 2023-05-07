@@ -4,22 +4,22 @@ class CronComponent(val value: String, val timeDescriptor: TimeDescriptor, var r
 
     companion object {
 
-        const val COMMA = ","
-        const val DASH = "-"
-        const val SLASH = "/"
-        const val ASTERISK = "*"
+        const val COMMA = ','
+        const val DASH = '-'
+        const val SLASH = '/'
+        const val ASTERISK = '*'
 
         val CRON_REGEX = Regex("((\\d+,)+\\d+|(\\d+-\\d+)|\\*)(/\\d+)?|\\d+")
-        val SPECIAL_CHARS = listOf<CharSequence>(COMMA, ASTERISK, SLASH, DASH)
+        val SPECIAL_CHARS = listOf(COMMA, ASTERISK, SLASH, DASH)
     }
 
     fun with(value: String) = CronComponent(value, timeDescriptor, resolved)
 
-    fun split(delimiters: String) = value.split(delimiters)
+    fun split(char: Char) = value.split(char)
 
     fun isValid() = CRON_REGEX.matches(value.trim())
 
-    fun contains(chars: CharSequence) = value.contains(chars)
+    fun contains(char: Char) = value.contains(char)
 
     fun containsSpecialChar() = SPECIAL_CHARS.any { value.contains(it) }
 
@@ -30,5 +30,5 @@ class CronComponent(val value: String, val timeDescriptor: TimeDescriptor, var r
     fun invalidFormatMessage() = "Invalid cron expression format: '$value'"
 
     fun outOfRangeMessage() =
-        "Field '${timeDescriptor.desc}' $value out of ${timeDescriptor.range()} range"
+        "Field '${timeDescriptor.label}' $value contains value out of ${timeDescriptor.range()} range"
 }

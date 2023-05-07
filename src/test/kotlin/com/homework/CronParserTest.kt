@@ -1,6 +1,8 @@
 package com.homework
 
-import com.homework.CronParser.Companion.ERROR_CODE
+import com.homework.CronExpressionParser.Companion.ERROR_CODE
+import com.homework.CronExpressionParser.Companion.TOO_FEW_ARGUMENTS_MESSAGE
+import com.homework.CronExpressionParser.Companion.USAGE_MESSAGE
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockkStatic
@@ -24,7 +26,7 @@ class CronParserTest {
     @BeforeEach
     fun setUp() {
         System.setOut(PrintStream(outputStreamCaptor))
-        mockkStatic("com.homework.CronParserKt")
+        mockkStatic("com.homework.CronExpressionParserKt")
         every { exitWithError() } throws RuntimeException(ERROR_CODE.toString())
     }
 
@@ -38,16 +40,16 @@ class CronParserTest {
 
         tryParse(emptyArray())
 
-        assertOutputEquals("Usage: cron_parser.kts <cron_expression>")
+        assertOutputEquals(USAGE_MESSAGE)
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["-h", "--help"])
+    @ValueSource(strings = ["-h", "--help", "help", "man"])
     fun `should print manual and exit when help argument provided`(arg: String) {
 
         tryParse(arrayOf(arg))
 
-        assertOutputEquals("Usage: cron_parser.kts <cron_expression>")
+        assertOutputEquals(USAGE_MESSAGE)
     }
 
     @Test
@@ -55,7 +57,7 @@ class CronParserTest {
 
         tryParse(arrayOf("1 1 1 1 1"))
 
-        assertOutputEquals("Too few cron components provided. Please provide a valid cron string.")
+        assertOutputEquals(TOO_FEW_ARGUMENTS_MESSAGE)
     }
 
     @ParameterizedTest
@@ -133,9 +135,9 @@ class CronParserTest {
     @CsvSource(
         delimiter = '|',
         textBlock = """
-            1-60 0 1,15 * * /usr/bin/find   | Field 'minute' 1-60 out of 0..59 range
-            1,2 24 1,15 * * /usr/bin/find   | Field 'hour' 24 out of 0..23 range
-            1,2 1,27 1,15 * * /usr/bin/find | Field 'hour' 1,27 out of 0..23 range"""
+            1-60 0 1,15 * * /usr/bin/find   | Field 'minute' 1-60 contains value out of 0..59 range
+            1,2 24 1,15 * * /usr/bin/find   | Field 'hour' 24 contains value out of 0..23 range
+            1,2 1,27 1,15 * * /usr/bin/find | Field 'hour' 1,27 contains value out of 0..23 range"""
     )
     internal fun `should print error message when out of range cron component was provided`(
         input: String,
@@ -167,7 +169,7 @@ class CronParserTest {
     private fun tryParse(args: Array<String>): RuntimeException? {
 
         return try {
-            CronParser().parse(args)
+            CronExpressionParser().parse(args)
             null
         } catch (ex: RuntimeException) {
             System.setOut(standardOut)
@@ -186,4 +188,3 @@ class CronParserTest {
         assertEquals(expected.trimIndent(), outputStreamCaptor.toString().split(System.lineSeparator())[lineNo])
     }
 }
-
